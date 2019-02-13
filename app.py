@@ -1,42 +1,64 @@
 import tweepy
-import requests
+from tumblpy import Tumblpy
+import re
+import os
 
-consumer_key = 'aCVjJetrfW2fOZj3Pyo33sI5C'
-consumer_secret = 'gpn8jyT3fgNNsX9AQnaTav5Hobc5NpmZT6KQGXXub0vuPEckYx'
-access_token = '3109407644-zJUvsLDkzZXqZNVOC5EU1zlwWSq04F8sfpLjFrv'
-access_token_secret = 'CZJ9AEbnwVPYbjnLd9S5sw1w2R5CqiIJXDglMy4D6DE0f'
+from flask import Flask
+app = Flask(__name__)
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
+twi_consumer_key = os.environ["ENV_TWI_CONSUMER_KEY"]
+twi_consumer_secret = os.environ["ENV_TWI_CONSUMER_KEY_SECRET"]
+twi_access_token = os.environ["ENV_TWI_ACCESS_TOKEN"]
+twi_access_token_secret = os.environ["ENV_TWI_ACCESS_TOKEN_SECRET"]
 
-api = tweepy.API(auth)
+twi_auth = tweepy.OAuthHandler(twi_consumer_key, twi_consumer_secret)
+twi_auth.set_access_token(twi_access_token, twi_access_token_secret)
 
-def get_favs(user_name):
-    favs = []
-    fav_tweets = api.favorites(user_name)
-    for tweet in fav_tweets:
-        fav = {}
-        fav["text"] = tweet.text
-        if hasattr(tweet, "extended_entities"):
-            images = []
-            for media in tweet.extended_entities["media"]:
-                images.append(media["media_url_https"])
-            fav["images"] = images
-        else:
-            pass
-        favs.append(fav)
-    return favs
+twi_api = tweepy.API(twi_auth)
 
-def post_tumblr(blog_host,favs):
-    tumblr_post_endpoint = "https://api.tumblr.com/v2/blog/{blog_host}/post".format(blog_host=blog_host)
-    for fav in favs:
-        if fav.has_key("images"):
-            image_urls = "\n".join(fav["images"])
-            body = "<blockquote cite=\"{tweet_uri}\">{text}</blockquote>\n{image_urls}".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls)
-        else:
-            body = "<blockquote cite=\"{tweet_uri}\">{text}</blockquote>".format(tweet_uri=fav["tweet_uri"], text=fav["text"])
+tum_consumer_key = os.environ["ENV_TUM_CONSUMER_KEY"]
+tum_consumer_secret = os.environ["ENV_TUM_CONSUMER_KEY_SECRET"]
+tum_oauth_token = os.environ["ENV_TUM_OAUTH_TOKEN"]
+tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
+
+tum_api = Tumblpy(tum_consumer_key, tum_consumer_secret, tum_oauth_token, tum_oauth_token_secret)
+
+def get_latest_fav(user_name):
+    fav = {}
+    latest_fav_tweet = twi_api.favorites(user_name)[0]
+    latest_fav_tweet_text = re.sub(r'https://t.co/\w*','',latest_fav_tweet.text)
+    fav["text"] = latest_fav_tweet_text
+    if hasattr(latest_fav_tweet, "extended_entities"):
+        images = []
+        for media in latest_fav_tweet.extended_entities["media"]:
+            images.append(media["media_url_https"])
+        fav["images"] = images
+    else:
+        pass
+    tweet_id = latest_fav_tweet.id
+    tweet_author = latest_fav_tweet.user.screen_name
+    fav["tweet_author"] = tweet_author
+    fav["tweet_uri"] = "https://twitter.com/{tweet_author}/status/{tweet_id}".format(tweet_author=tweet_author, tweet_id=tweet_id)
+    return fav
+
+def post_tumblr(blog_url,fav):
+    if "images" in fav:
+        image_urls = ""
+        for url in fav["images"]:
+            url_for_post = "<img src=\"{url}\">".format(url=url)
+            image_urls += url_for_post
+        body = "<i>{text}</i>\n\n<image>{image_urls}</image>\n\nfrom&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
+    else:
+        body = "<i>{text}</i>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
     entry_data = {
         'body':body
     }
-favs = get_favs("odenmis")
-print(favs)
+    tum_api.post('post', blog_url=blog_url, params=entry_data)
+
+@app.route("/")
+def twi2tum():
+    latest_fav = get_latest_fav("odenmis")
+    blog_url = "tetsunoaka.tumblr.com"
+    post_tumblr(blog_url, latest_fav)
+# favs = get_favs("odenmis")
+# post_tumblr("tetsunoaka.tumblr.com",favs)
