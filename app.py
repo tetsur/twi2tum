@@ -55,10 +55,10 @@ def post_tumblr(blog_url,fav):
     }
     tum_api.post('post', blog_url=blog_url, params=entry_data)
 
-@app.route("/")
+@app.route("/", methods=['GET'])
 def twi2tum():
     latest_fav = get_latest_fav("odenmis")
     blog_url = "tetsunoaka.tumblr.com"
     post_tumblr(blog_url, latest_fav)
-# favs = get_favs("odenmis")
-# post_tumblr("tetsunoaka.tumblr.com",favs)
+if __name__ == '__main__':
+    app.run()
