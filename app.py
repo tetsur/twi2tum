@@ -3,7 +3,7 @@ from tumblpy import Tumblpy
 import re
 import os
 
-from flask import Flask
+from flask import Flask, request
 app = Flask(__name__)
 
 twi_consumer_key = os.environ["ENV_TWI_CONSUMER_KEY"]
@@ -23,9 +23,9 @@ tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
 
 tum_api = Tumblpy(tum_consumer_key, tum_consumer_secret, tum_oauth_token, tum_oauth_token_secret)
 
-def get_latest_fav(user_name):
+def get_latest_fav(tweet_id):
     fav = {}
-    latest_fav_tweet = twi_api.favorites(user_name)[0]
+    latest_fav_tweet = twi_api.get_status(tweet_id)
     latest_fav_tweet_text = re.sub(r'https://t.co/\w*','',latest_fav_tweet.text)
     fav["text"] = latest_fav_tweet_text
     if hasattr(latest_fav_tweet, "extended_entities"):
@@ -35,7 +35,6 @@ def get_latest_fav(user_name):
         fav["images"] = images
     else:
         pass
-    tweet_id = latest_fav_tweet.id
     tweet_author = latest_fav_tweet.user.screen_name
     fav["tweet_author"] = tweet_author
     fav["tweet_uri"] = "https://twitter.com/{tweet_author}/status/{tweet_id}".format(tweet_author=tweet_author, tweet_id=tweet_id)
@@ -60,7 +59,8 @@ def index():
     return 'Hello World!'
 @app.route("/post", methods=['GET'])
 def twi2tum():
-    latest_fav = get_latest_fav("odenmis")
+    faved_tweet_id = request.args.get('LinkToTweet')
+    latest_fav = get_latest_fav(faved_tweet_id)
     blog_url = "tetsunoaka.tumblr.com"
     post_tumblr(blog_url, latest_fav)
     print(latest_fav)
