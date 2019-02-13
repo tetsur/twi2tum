@@ -63,6 +63,7 @@ def twi2tum():
     latest_fav = get_latest_fav("odenmis")
     blog_url = "tetsunoaka.tumblr.com"
     post_tumblr(blog_url, latest_fav)
+    print(latest_fav)
     return 'OK'
 if __name__ == '__main__':
     app.run()
