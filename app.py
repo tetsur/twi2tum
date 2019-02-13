@@ -59,7 +59,8 @@ def index():
     return 'Hello World!'
 @app.route("/post", methods=['GET'])
 def twi2tum():
-    faved_tweet_link = request.args.get('LinkToTweet')
+    faved_tweet_link = str(request.args.get('LinkToTweet'))
+    print(faved_tweet_link)
     expression = r"twitter.com/([^/]+)/status/([^/]+)"
     match = re.search(expression,faved_tweet_link)
     faved_tweet_id = match.group(2)
