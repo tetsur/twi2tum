@@ -36,7 +36,7 @@ def get_latest_fav(tweet_id):
                 images.append(media["media_url_https"])
             else:
                 fav["media_type"] = "video"
-                images.append(media["variants"][0]["url"])
+                images.append(media["video_info"]["variants"][0]["url"])
         fav["images"] = images
     else:
         pass
