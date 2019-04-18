@@ -31,12 +31,7 @@ def get_latest_fav(tweet_id):
     if hasattr(latest_fav_tweet, "extended_entities"):
         images = []
         for media in latest_fav_tweet.extended_entities["media"]:
-            if media["type"] == "photo":
-                fav["media_type"] = "photo"
-                images.append(media["media_url_https"])
-            else:
-                fav["media_type"] = "video"
-                images.append(media["video_info"]["variants"][0]["url"])
+            images.append(media["media_url_https"])
         fav["images"] = images
     else:
         pass
@@ -48,20 +43,14 @@ def get_latest_fav(tweet_id):
 def post_tumblr(blog_url,fav):
     if "images" in fav:
         image_urls = ""
-        if fav["media_type"] == "photo":
-            for url in fav["images"]:
-                url_for_post = "<img src=\"{url}\">\n".format(url=url)
-                image_urls += url_for_post
-            body = "<i>{text}</i>\n\n<image>{image_urls}</image>\n\nfrom&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
-        else:
-            for url in fav["images"]:
-                video_tag = "<img src=\"{url}\" data-img-hq=\"{url}\">".format(url=url)
-                body = "<i>{text}</i>\n \n {video_tag} \n \n from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], video_tag=video_tag, tweet_author=fav["tweet_author"])
+        for url in fav["images"]:
+            url_for_post = "<img src=\"{url}\">\n".format(url=url)
+            image_urls += url_for_post
+        body = "<i>{text}</i>\n\n<image>{image_urls}</image>\n\nfrom&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
     else:
         body = "<i>{text}</i>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
     entry_data = {
-        'body':body,
-        'format': 'html'
+        'body':body
     }
     tum_api.post('post', blog_url=blog_url, params=entry_data)
 
