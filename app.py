@@ -44,11 +44,11 @@ def post_tumblr(blog_url,fav):
     if "images" in fav:
         image_urls = ""
         for url in fav["images"]:
-            url_for_post = "<img src=\"{url}\">\n".format(url=url)
+            url_for_post = "<img src=\"{url}\"><br>".format(url=url)
             image_urls += url_for_post
-        body = "<i>{text}</i>\n\n<image>{image_urls}</image>\n\nfrom&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
+        body = "<i>{text}</i><br><br><image>{image_urls}</image><br><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
     else:
-        body = "<i>{text}</i>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
+        body = "<i>{text}</i><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
     entry_data = {
         'body':body
     }
