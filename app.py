@@ -27,7 +27,7 @@ def get_latest_fav(tweet_id):
     fav = {}
     latest_fav_tweet = twi_api.get_status(tweet_id, tweet_mode='extended')
     latest_fav_tweet_text = re.sub(r'https://t.co/\w*','',latest_fav_tweet.text)
-    fav["text"] = latest_fav_tweet_text
+    fav["full_text"] = latest_fav_tweet_text
     if hasattr(latest_fav_tweet, "extended_entities"):
         images = []
         for media in latest_fav_tweet.extended_entities["media"]:
