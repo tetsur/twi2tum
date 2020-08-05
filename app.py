@@ -63,8 +63,8 @@ def twi2tum():
     print(faved_tweet_link)
     expression = r"twitter.com/([^/]+)/status/([^/]+)"
     match = re.search(expression,faved_tweet_link)
-    faved_tweet_id = str(match.group(2))
-    latest_fav = get_latest_fav(faved_tweet_id)
+    faved_tweet_id = match.group(2)
+    latest_fav = get_latest_fav(faved_tweet_id.decode('utf-8'))
     blog_url = "tetsunoaka.tumblr.com"
     post_tumblr(blog_url, latest_fav)
     print(latest_fav)
