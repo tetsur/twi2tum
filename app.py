@@ -2,6 +2,7 @@ import tweepy
 from tumblpy import Tumblpy
 import re
 import os
+import json
 
 from flask import Flask, request
 app = Flask(__name__)
@@ -46,7 +47,7 @@ def post_tumblr(blog_url,fav):
         for url in fav["images"]:
             url_for_post = "<img src=\"{url}\"><br>".format(url=url)
             image_urls += url_for_post
-        body = "<blockquote><i>{text}</i></blockquote><br><br><image>{image_urls}</image><br><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
+        body = "<blockquote><i>{text}</i></blockquote><br><image>{image_urls}</image><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
     else:
         body = "<blockquote><i>{text}</i><br><footer>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a></footer></blockquote>".format(tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
     entry_data = {
@@ -57,9 +58,9 @@ def post_tumblr(blog_url,fav):
 @app.route("/")
 def index():
     return 'Hello World!'
-@app.route("/post", methods=['GET'])
+@app.route("/post", methods=['POST'])
 def twi2tum():
-    faved_tweet_link = str(request.data)
+    faved_tweet_link = json.loads(request.data)["linkToTweet"]
     print(faved_tweet_link)
     expression = r"twitter.com/([^/]+)/status/([^/]+)"
     match = re.search(expression,faved_tweet_link)
