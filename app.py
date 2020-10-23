@@ -24,7 +24,7 @@ tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
 tum_blog_url = os.environ["ENV_TUM_BLOG_URL"]
 
 tum_api = pytumblr.TumblrRestClient(tum_consumer_key, tum_consumer_secret,
-                  tum_oauth_token, tum_oauth_token_secret)
+                                    tum_oauth_token, tum_oauth_token_secret)
 
 
 def get_latest_fav(tweet_id):
@@ -54,9 +54,11 @@ def post_tumblr(fav):
             image_urls.append(url)
         caption = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-        tum_api.create_photo(tum_blog_url, state="published", source=image_urls, caption=caption)
+        tum_api.create_photo(tum_blog_url, state="published",
+                             data=image_urls, caption=caption)
     else:
-        tum_api.create_quote(tum_blog_url, state="published", quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
+        tum_api.create_quote(tum_blog_url, state="published",
+                             quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
 
 
 @app.route("/")
