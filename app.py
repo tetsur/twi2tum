@@ -2,6 +2,8 @@ import tweepy
 import pytumblr
 import re
 import os
+import urllib.request
+import urllib.error
 import json
 
 from flask import Flask, request
@@ -49,16 +51,29 @@ def get_latest_fav(tweet_id):
 
 def post_tumblr(fav):
     if "images" in fav:
-        image_urls = []
-        for url in fav["images"]:
-            image_urls.append(url)
+        img_paths = []
+        for i, url in enumerate(fav["images"]):
+            ext = os.path.splitext(url)[1][:1]
+            img_path = f'tmp_imgs/img_{i}.{ext}'
+            download_file(url, img_path)
+            img_paths.append(img_path)
         caption = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
         tum_api.create_photo(tum_blog_url, state="published",
-                             data=image_urls, caption=caption)
+                             data=img_paths, caption=caption)
     else:
         tum_api.create_quote(tum_blog_url, state="published",
                              quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
+
+
+def download_file(url, dst_path):
+    try:
+        with urllib.request.urlopen(url) as web_file:
+            data = web_file.read()
+            with open(dst_path, mode='wb') as local_file:
+                local_file.write(data)
+    except urllib.error.URLError as e:
+        print(e)
 
 
 @app.route("/")
