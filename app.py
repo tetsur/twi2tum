@@ -1,5 +1,5 @@
 import tweepy
-from tumblpy import Tumblpy
+import pytumblr
 import re
 import os
 import json
@@ -23,7 +23,7 @@ tum_oauth_token = os.environ["ENV_TUM_OAUTH_TOKEN"]
 tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
 tum_blog_url = os.environ["ENV_TUM_BLOG_URL"]
 
-tum_api = Tumblpy(tum_consumer_key, tum_consumer_secret,
+tum_api = pytumblr.TumblrRestClient(tum_consumer_key, tum_consumer_secret,
                   tum_oauth_token, tum_oauth_token_secret)
 
 
@@ -48,21 +48,15 @@ def get_latest_fav(tweet_id):
 
 
 def post_tumblr(fav):
-    params = {}
     if "images" in fav:
         image_urls = []
         for url in fav["images"]:
             image_urls.append(url)
-        body = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
+        caption = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-        params['type'] = 'photo'
-        params['caption'] = body
-        params['data'] = image_urls
+        tum_api.create_photo(tum_blog_url, state="published", source=image_urls, caption=caption)
     else:
-        body = "<blockquote><i>{text}</i><br><footer>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a></footer></blockquote>".format(
-            tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-        params['body'] = body
-    tum_api.post('post', blog_url=tum_blog_url, params=params)
+        tum_api.create_quote(tum_blog_url, state="published", quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
 
 
 @app.route("/")
