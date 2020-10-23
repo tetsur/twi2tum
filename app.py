@@ -48,20 +48,21 @@ def get_latest_fav(tweet_id):
 
 
 def post_tumblr(fav):
+    params = {}
     if "images" in fav:
-        image_urls = ""
+        image_urls = []
         for url in fav["images"]:
-            url_for_post = "<img src=\"{url}\"><br>".format(url=url)
-            image_urls += url_for_post
-        body = "<blockquote><i>{text}</i></blockquote><br><image>{image_urls}</image><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
-            tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
+            image_urls.append(url)
+        body = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
+            tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
+        params['type'] = 'photo'
+        params['caption'] = body
+        params['data'] = image_urls
     else:
         body = "<blockquote><i>{text}</i><br><footer>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a></footer></blockquote>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-    entry_data = {
-        'body': body
-    }
-    tum_api.post('post', blog_url=tum_blog_url, params=entry_data)
+        params['body'] = body
+    tum_api.post('post', blog_url=tum_blog_url, params=params)
 
 
 @app.route("/")
