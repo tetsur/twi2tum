@@ -52,6 +52,7 @@ def get_latest_fav(tweet_id):
 def post_tumblr(fav):
     if "images" in fav:
         img_paths = []
+        # いったん画像を保存しないと複数枚投稿できない
         for i, url in enumerate(fav["images"]):
             ext = os.path.splitext(url)[1][:1]
             img_path = f'tmp_imgs/img_{i}.{ext}'
