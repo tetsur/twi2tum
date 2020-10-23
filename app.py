@@ -1,7 +1,9 @@
 import tweepy
-from tumblpy import Tumblpy
+import pytumblr
 import re
 import os
+import urllib.request
+import urllib.error
 import json
 
 from flask import Flask, request
@@ -23,8 +25,8 @@ tum_oauth_token = os.environ["ENV_TUM_OAUTH_TOKEN"]
 tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
 tum_blog_url = os.environ["ENV_TUM_BLOG_URL"]
 
-tum_api = Tumblpy(tum_consumer_key, tum_consumer_secret,
-                  tum_oauth_token, tum_oauth_token_secret)
+tum_api = pytumblr.TumblrRestClient(tum_consumer_key, tum_consumer_secret,
+                                    tum_oauth_token, tum_oauth_token_secret)
 
 
 def get_latest_fav(tweet_id):
@@ -49,19 +51,33 @@ def get_latest_fav(tweet_id):
 
 def post_tumblr(fav):
     if "images" in fav:
-        image_urls = ""
-        for url in fav["images"]:
-            url_for_post = "<img src=\"{url}\"><br>".format(url=url)
-            image_urls += url_for_post
-        body = "<blockquote><i>{text}</i></blockquote><br><image>{image_urls}</image><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
-            tweet_uri=fav["tweet_uri"], text=fav["text"], image_urls=image_urls, tweet_author=fav["tweet_author"])
-    else:
-        body = "<blockquote><i>{text}</i><br><footer>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a></footer></blockquote>".format(
+        img_paths = []
+        # いったん画像を保存しないと複数枚投稿できない
+        for i, url in enumerate(fav["images"]):
+            ext = os.path.splitext(url)[1][:1]
+            img_path = f'tmp_imgs/img_{i}.{ext}'
+            download_file(url, img_path)
+            img_paths.append(img_path)
+        caption = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-    entry_data = {
-        'body': body
-    }
-    tum_api.post('post', blog_url=tum_blog_url, params=entry_data)
+        tum_api.create_photo(tum_blog_url, state="published",
+                             data=img_paths, caption=caption)
+        # 投稿終わったら画像は削除する
+        for img_path in img_paths:
+            os.remove(img_path)
+    else:
+        tum_api.create_quote(tum_blog_url, state="published",
+                             quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
+
+
+def download_file(url, dst_path):
+    try:
+        with urllib.request.urlopen(url) as web_file:
+            data = web_file.read()
+            with open(dst_path, mode='wb') as local_file:
+                local_file.write(data)
+    except urllib.error.URLError as e:
+        print(e)
 
 
 @app.route("/")
