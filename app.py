@@ -64,7 +64,7 @@ def post_tumblr(fav):
         tags = []
         if tum_tags:
             tags = tum_tags.split(",")
-        tum_api.create_photo(tum_blog_url, state="published", tags=tags
+        tum_api.create_photo(tum_blog_url, state="published", tags=tags,
                              data=img_paths, caption=caption)
         # 投稿終わったら画像は削除する
         for img_path in img_paths:
