@@ -24,6 +24,7 @@ tum_consumer_secret = os.environ["ENV_TUM_CONSUMER_KEY_SECRET"]
 tum_oauth_token = os.environ["ENV_TUM_OAUTH_TOKEN"]
 tum_oauth_token_secret = os.environ["ENV_TUM_OAUTH_TOKEN_SECRET"]
 tum_blog_url = os.environ["ENV_TUM_BLOG_URL"]
+tum_tags = os.environ["ENV_TUM_TAGS"]
 
 tum_api = pytumblr.TumblrRestClient(tum_consumer_key, tum_consumer_secret,
                                     tum_oauth_token, tum_oauth_token_secret)
@@ -60,7 +61,10 @@ def post_tumblr(fav):
             img_paths.append(img_path)
         caption = "<blockquote><i>{text}</i></blockquote><br>from&nbsp;<a href=\"{tweet_uri}\">{tweet_author}&nbsp;on&nbsp;Twitter</a>".format(
             tweet_uri=fav["tweet_uri"], text=fav["text"], tweet_author=fav["tweet_author"])
-        tum_api.create_photo(tum_blog_url, state="published",
+        tags = []
+        if tum_tags:
+            tags = tum_tags.split(",")
+        tum_api.create_photo(tum_blog_url, state="published", tags=tags
                              data=img_paths, caption=caption)
         # 投稿終わったら画像は削除する
         for img_path in img_paths:
