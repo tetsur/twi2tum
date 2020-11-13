@@ -69,6 +69,7 @@ def post_tumblr(fav):
         # 投稿終わったら画像は削除する
         for img_path in img_paths:
             os.remove(img_path)
+            sleep(1)
     else:
         tum_api.create_quote(tum_blog_url, state="published",
                              quote=fav["text"], source=f'from&nbsp;<a href=\"{fav["tweet_uri"]}\">{fav["tweet_author"]}&nbsp;on&nbsp;Twitter</a>')
